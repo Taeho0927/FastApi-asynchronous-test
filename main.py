@@ -10,12 +10,20 @@ DATABASE_URL = "postgresql://postgres:1234@127.0.0.1:5432/fastapi"
 async def read_root():
     return {"Hello": "World"}
 
+@app.get("/gpt")
+async def read_item():
+    async with app.state.pool.acquire() as connection:
+        query = "SELECT * FROM answers"
+        result2 = await connection.fetch(query)
+        return {"answers":result2}
+
 @app.get("/gpt/{item_id}")
 async def read_item(item_id: int, request: Request, q: str = None):
     async with app.state.pool.acquire() as connection:
         query = "SELECT answer FROM answers WHERE answer_id = $1"
         result = await connection.fetchval(query, item_id)
         return {"answer":result}
+    
 
 @app.on_event("startup")
 async def startup():
