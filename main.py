@@ -1,29 +1,35 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 import asyncpg
 from asyncpg import Pool
+from pydantic import BaseModel
+
+
+class Question(BaseModel):
+    question: str
+
 
 app = FastAPI()
 
-DATABASE_URL = "postgresql://postgres:1234@127.0.0.1:5432/fastapi"
+DATABASE_URL = "postgresql://postgres:1234@127.0.0.1:5432/ondo_lite_local"
 
 @app.get("/")
 async def read_root():
     return {"Hello": "World"}
 
 @app.get("/gpt")
-async def read_item():
+async def read_all_answer():
     async with app.state.pool.acquire() as connection:
-        query = "SELECT * FROM answers"
-        result2 = await connection.fetch(query)
-        return {"answers":result2}
+        query = "SELECT * FROM datas"
+        result = await connection.fetch(query)
+        return result
 
-@app.get("/gpt/{item_id}")
-async def read_item(item_id: int, request: Request, q: str = None):
+@app.post("/gpt")
+async def create_answer(q: Question):
     async with app.state.pool.acquire() as connection:
-        query = "SELECT answer FROM answers WHERE answer_id = $1"
-        result = await connection.fetchval(query, item_id)
-        return {"answer":result}
-    
+        query = "SELECT * FROM datas where id =1"
+        result = await connection.fetch(query)
+    response = q.question + "<의 답변입니다>"
+    return response,result
 
 @app.on_event("startup")
 async def startup():
