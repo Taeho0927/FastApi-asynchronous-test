@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class Question(BaseModel):
     question: str
+    question_id : int
 
 
 app = FastAPI()
@@ -26,10 +27,12 @@ async def read_all_answer():
 @app.post("/gpt")
 async def create_answer(q: Question):
     async with app.state.pool.acquire() as connection:
-        query = "SELECT * FROM datas where id =1"
-        result = await connection.fetch(query)
-    response = q.question + "<의 답변입니다>"
+        query = "SELECT * FROM datas where id=$1"
+        result = await connection.fetchrow(query,q.question_id)
+        print(q.question_id)
+    response = q.question + "<는 답변입니다>"
     return response,result
+
 
 @app.on_event("startup")
 async def startup():
